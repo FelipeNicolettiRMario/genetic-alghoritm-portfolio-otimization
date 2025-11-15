@@ -49,7 +49,10 @@ class GeneticAlgorithm(Generic[C]):
             else:
                 parents = self._pick_tournament(len(self._population) // 2)
 
-            if random() < self._crossover_chance:
+            if (
+                random() < self._crossover_chance
+                and parents[0].genetic_information() != parents[1].genetic_information()
+            ):
                 new_population.extend(parents[0].crossover(parents[1]))
 
             else:
@@ -65,12 +68,10 @@ class GeneticAlgorithm(Generic[C]):
             if random() < self._mutation_chance:
                 individual.mutate()
 
-    def run(self) -> C:
+    def run(self) -> set[C]:
+        elite = set()
         best: C = max(self._population, key=self._fitness_key)
         for generation in range(self._max_generations):
-
-            if best.fitness() >= self._threshold:
-                return best
 
             print(
                 f"Generation {generation} Best {best.fitness()} Avg {mean(map(self._fitness_key, self._population))}"
@@ -82,5 +83,6 @@ class GeneticAlgorithm(Generic[C]):
 
             if highest.fitness() > best.fitness():
                 best = highest
+            elite.add(best)
 
-        return best
+        return elite
