@@ -15,3 +15,6 @@ class Chromosome(ABC):
 
     @abstractmethod
     def mutate(self) -> None: ...
+
+    @abstractmethod
+    def genetic_information(self) -> str: ...
