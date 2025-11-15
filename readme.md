@@ -8,92 +8,153 @@ A estrutura do projeto está organizada da seguinte forma:
 
 ```
 project/
-|— env/
-|— models/
-|— services/
-    |— genetic_alghoritm/
-        |— __init__.py
-        |— chromosome.py
-        |— genetic_algorithm.py
-        |— wallet_chromosome.py
-    |— wallet/
-|— main.ipynb
-|— main.py
-|— requirements.txt
+│
+├── src/
+│   ├── genetic_alghoritm/
+│   │   ├── __init__.py
+│   │   ├── chromosome.py
+│   │   ├── genetic_algorithm.py
+│   │   └── island_model.py
+│   │
+│   ├── market/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   └── yahoo_finance_market_engine.py
+│   │
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── stock.py
+│   │
+│   └── strategies/
+│       ├── __init__.py
+│       └── triple_risk_efficiency.py
+│
+├── main.py
+├── main.ipynb
+├── readme.md
+└── requirements.txt
 ```
 
-### Principais Diretórios e Arquivos
 
-- **`env/`**: Contém configurações do ambiente.
-- **`models/`**: Contém definições e modelos de dados.
-- **`services/`**: Implementações dos módulos de serviços.
-  - **`genetic_alghoritm/`**: Implementação do algoritmo genético.
-    - `chromosome.py`: Definição de cromossomos genéricos.
-    - `genetic_algorithm.py`: Implementação do algoritmo genético.
-    - `wallet_chromosome.py`: Definição de cromossomos especializados para carteiras.
-  - **`wallet/`**: Implementação de funções para manipulação de carteiras.
-- **`main.py`**: Script principal que executa o algoritmo genético.
-- **`main.ipynb`**: Notebook para análise exploratória e testes.
-- **`requirements.txt`**: Dependências do projeto.
+---
 
-## Como Funciona
+## Descrição dos Diretórios
 
-### Passo a Passo
-1. **Geração Inicial de Carteiras**
-   - É criada uma população inicial de carteiras com distribuição aleatória de ações.
+### `genetic_alghoritm/`
+Implementação do núcleo evolutivo.
 
-2. **Definição de Cromossomos**
-   - Cada carteira é representada como um cromossomo, com características como alocação de ativos e desempenho histórico.
+- `chromosome.py`  
+  Classe base para cromossomos; define operações essenciais como aptidão, mutação e crossover.
 
-3. **Algoritmo Genético**
-   - Utiliza-se o algoritmo genético para evoluir as carteiras até atingir uma solução ótima. Ele inclui:
-     - **Seleção**: Escolha das melhores carteiras.
-     - **Crossover**: Combinação de carteiras selecionadas.
-     - **Mutação**: Pequenas alterações aleatórias para aumentar a diversidade.
+- `genetic_algorithm.py`  
+  Loop evolutivo principal: seleção, crossover, mutação e critério de parada.
 
-4. **Resultado Final**
-   - O algoritmo retorna a carteira otimizada após um número máximo de gerações ou ao atingir um limiar de desempenho.
+- `island_model.py`  
+  Versão multi-população (ilhas), usada para diversidade genética e redução de overfitting evolutivo.
+
+---
+
+### `market/`
+Camada de aquisição e abstração de dados do mercado.
+
+- `base.py`  
+  Classe base para engines de mercado.
+
+- `yahoo_finance_market_engine.py`  
+  Implementação que extrai preços históricos e métricas via Yahoo Finance.
+
+---
+
+### `models/`
+Modelos de domínio.
+
+- `stock.py`  
+  Representação de um ativo individual, contendo preços, retornos e metadados úteis ao algoritmo.
+
+---
+
+### `strategies/`
+Estratégias de avaliação e heurísticas de risco-retorno.
+
+- `triple_risk_efficiency.py`  
+  Implementa uma estratégia combinando Sharpe, volatilidade e eficiência de distribuição.
+
+---
+
+## Arquivos Principais
+
+- `main.py`  
+  Script principal para execução da otimização.
+
+- `main.ipynb`  
+  Experimentos exploratórios, gráficos, testes e tuning de parâmetros.
+
+- `requirements.txt`  
+  Dependências do projeto.
+
+---
+
+## Como o Algoritmo Funciona
+
+### 1. População Inicial
+Uma coleção de carteiras é criada aleatoriamente, cada uma representada como cromossomo.
+
+### 2. Avaliação de Aptidão
+Cada cromossomo calcula sua eficiência usando dados históricos + estratégia escolhida (ex: Sharpe).
+
+### 3. Seleção
+Os melhores indivíduos são escolhidos por torneio ou rank.
+
+### 4. Crossover
+Combinação de duas carteiras para gerar novas distribuições.
+
+### 5. Mutação
+Pequenas alterações nas alocações para promover diversidade e escapar de ótimos locais.
+
+### 6. Island Model (opcional)
+Populações evoluem separadamente, trocando indivíduos após algumas gerações.
+
+### Resultado
+Após muitas gerações, obtemos uma carteira com melhor relação risco-retorno segundo o critério definido.
+
+---
 
 ### Exemplo de Uso
 
 O arquivo `main.py` executa o algoritmo genético para otimizar carteiras com o seguinte fluxo:
 
 ```python
-from services.wallet.get import GetWalletDataTools
-from services.genetic_alghoritm.wallet_chromosome import WalletChromosome
-from services.genetic_alghoritm.genetic_algorithm import GeneticAlgorithm
+from src.market.yahoo_finance_market_engine import YahooFinanceMarketEngine
+from src.genetic_alghoritm.genetic_algorithm import GeneticAlgorithm
+from src.genetic_alghoritm.island_model import IslandModelGeneticAlgorithm
+from src.strategies.triple_risk_effiiciency import TripleRiskEfficiencyChromosome
 
-# Definir os ativos e período
 tickers = ["AAPL", "MSFT", "GOOGL", "AMZN"]
-repo = GetWalletDataTools(tickers, "2023-01-01", "2024-01-01")
 
-# Geração inicial de carteiras
 random_distribuited_wallets = [
-    GetWalletDataTools.get_random_distribuited_wallet(tickers) for _ in range(200)
+    YahooFinanceMarketEngine.get_random_distribuited_wallet(tickers) for _ in range(50)
 ]
 
-# Criar cromossomos
+engine = YahooFinanceMarketEngine(tickers, "2023-01-01", "2024-01-01", risk_free_rate=0.05)
+
 initial_generation = [
-    WalletChromosome(wallet, repo, 0.05) for wallet in random_distribuited_wallets
+    TripleRiskEfficiencyChromosome(wallet, engine, 0.05) for wallet in random_distribuited_wallets
 ]
 
-# Configurar o algoritmo genético
-ga: GeneticAlgorithm[WalletChromosome] = GeneticAlgorithm(
+isga: IslandModelGeneticAlgorithm[TripleRiskEfficiencyChromosome] = IslandModelGeneticAlgorithm(
     initial_population=initial_generation,
-    threshold=1.0,
-    max_generations=700,
+    threshold=1.10,
+    max_generations=10,
     mutation_chance=0.1,
     crossover_chance=0.7,
 )
+result: list[TripleRiskEfficiencyChromosome] = isga.run()
 
-# Executar e imprimir o resultado
-result: WalletChromosome = ga.run()
-print(result)
 ```
 
 ## Requisitos
 
-- Python 3.8 ou superior
+- Python 3.12 ou superior
 - Bibliotecas listadas no arquivo `requirements.txt`
 
 ## Instalação e Execução
