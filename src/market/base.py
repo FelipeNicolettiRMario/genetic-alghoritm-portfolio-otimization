@@ -30,3 +30,19 @@ class IMarketEngine(ABC):
         wallet: list[str], total_number_of_stocks: int = 100
     ) -> list[Stock]:
         pass
+
+    @abstractmethod
+    def get_random_assets_wallet(
+        self, tickers: list[str], max_assets: int
+    ) -> list[str]:
+        pass
+
+    @abstractmethod
+    def get_fundamentalist_data(self, ticker: str) -> "FundamentalData":
+        pass
+
+    @abstractmethod
+    def get_multiple_fundamentalist_data(
+        self, tickers: list[str]
+    ) -> dict[str, "FundamentalData"]:
+        pass

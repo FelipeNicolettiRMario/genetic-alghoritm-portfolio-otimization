@@ -2,7 +2,9 @@ import yfinance
 import random
 import numpy as np
 
-from src.models.stock import Stock
+from cachetools.func import lru_cache
+
+from src.models.stock import FundamentalData, Stock
 from src.market.base import IMarketEngine
 
 
@@ -120,3 +122,79 @@ class YahooFinanceMarketEngine(IMarketEngine):
             distribuited_wallet.append(Stock(ticker=ticker, amount=distribuition))
 
         return distribuited_wallet
+
+    @staticmethod
+    def get_random_assets_wallet(
+        tickers: list[str], min_assets: int = 3, max_assets: int = 10
+    ) -> list[str]:
+        number_of_assets = random.randint(min_assets, max_assets)
+        selected_tickers = random.sample(tickers, number_of_assets)
+
+        return selected_tickers
+
+    @lru_cache(maxsize=128)
+    def get_fundamentalist_data(self, ticker: str) -> FundamentalData:
+        t = yfinance.Ticker(ticker)
+
+        bs = t.balance_sheet
+        if bs is None or bs.empty:
+            raise ValueError(f"Sem balance sheet disponível para {ticker}")
+
+        bs_latest = bs.iloc[:, 0]
+
+        invested_capital = float(bs_latest.get("Invested Capital", 0))
+        total_debt = float(bs_latest.get("Total Debt", 0))
+        equity = float(bs_latest.get("Common Stock Equity", 0))
+
+        if invested_capital == 0:
+            invested_capital = 1e-6
+
+        fs = t.financials
+        if fs is None or fs.empty:
+            raise ValueError(f"Sem income statement disponível para {ticker}")
+
+        fs_latest = fs.iloc[:, 0]
+
+        net_income = float(fs_latest.get("Net Income", 0))
+        ebit = float(fs_latest.get("EBIT", 0))
+        ebitda = float(fs_latest.get("EBITDA", 0))
+        tax_rate = float(fs_latest.get("Tax Rate For Calcs", 0.25))
+
+        nopat = ebit * (1 - tax_rate)
+        roic = nopat / invested_capital
+
+        roe = net_income / equity if equity != 0 else 0
+
+        if ebitda == 0:
+            debt_ebitda = float("inf")
+        else:
+            debt_ebitda = total_debt / ebitda
+
+        net_incomes = fs.loc["Net Income"].dropna()
+
+        if len(net_incomes) >= 2:
+            ni_t0 = float(net_incomes.iloc[0])
+            ni_t1 = float(net_incomes.iloc[1])
+            growth_rate = (ni_t0 - ni_t1) / abs(ni_t1) if ni_t1 != 0 else 0
+        else:
+            growth_rate = 0
+
+        return FundamentalData(
+            ticker=ticker,
+            roic=roic,
+            roe=roe,
+            debt_ebitda=debt_ebitda,
+            growth_rate=growth_rate,
+        )
+
+    def get_multiple_fundamentalist_data(
+        self, tickers: list[str]
+    ) -> dict[str, FundamentalData]:
+        fundamental_data = {}
+        for ticker in tickers:
+            try:
+                data = self.get_fundamentalist_data(ticker)
+                fundamental_data[ticker] = data
+            except ValueError as e:
+                print(f"Erro ao obter dados fundamentais para {ticker}: {e}")
+        return fundamental_data

@@ -11,8 +11,8 @@ class IslandModelGeneticAlgorithm(Generic[C]):
 
     def __init__(
         self,
-        initial_population,
-        threshold,
+        initial_population: list[C],
+        threshold: float,
         islands_numbers=5,
         max_generations=100,
         mutation_chance=0.01,
@@ -51,5 +51,5 @@ class IslandModelGeneticAlgorithm(Generic[C]):
         results = []
         for future in futures:
             results.extend(future.result())
-    
+
         return results
