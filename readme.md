@@ -1,6 +1,6 @@
 # Projeto de Otimização de Carteiras com Algoritmo Genético
 
-Este projeto utiliza um algoritmo genético para otimizar distribuições de carteiras de ações com base em um conjunto de indicadores financeiros e dados históricos.
+Este projeto utiliza um algoritmo genético para otimizar carteiras de investimentos, buscando maximizar o retorno ajustado ao risco com base em dados históricos do mercado financeiro.
 
 ## Estrutura do Projeto
 
@@ -25,9 +25,10 @@ project/
 │   │   ├── __init__.py
 │   │   └── stock.py
 │   │
-│   └── strategies/
+│   └── usecases/
 │       ├── __init__.py
-│       └── triple_risk_efficiency.py
+│       ├── fundamentalist.py
+│       └── volatility.py
 │
 ├── main.py
 ├── main.ipynb
@@ -73,12 +74,14 @@ Modelos de domínio.
 
 ---
 
-### `strategies/`
+### `usecases/`
 Estratégias de avaliação e heurísticas de risco-retorno.
 
-- `triple_risk_efficiency.py`  
-  Implementa uma estratégia combinando Sharpe, volatilidade e eficiência de distribuição.
+- `volatility.py`  
+  Implementa uma estratégia combinando Sharpe, volatilidade e eficiência de distribuição para encontrar os indíviduos que maximizam retorno ajustado ao risco.
 
+- `fundamentalist.py`
+  Implementa uma estratégia baseada em indicadores fundamentalistas (ROIC, Crescimento, ROE, Dívida/Patrimônio) para selecionar carteiras com bons fundamentos financeiros.
 ---
 
 ## Arquivos Principais
