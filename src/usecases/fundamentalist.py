@@ -54,7 +54,7 @@ class FundamentalistChromosome(Chromosome):
 
         max_son_size = max(len(self.tickers), len(other.tickers))
         min_son_size = min(len(self.tickers), len(other.tickers))
-        
+
         for _ in range(number_of_sons):
             son_size = np.random.randint(min_son_size, max_son_size + 1)
             combined_tickers = list(set(self.tickers + other.tickers))

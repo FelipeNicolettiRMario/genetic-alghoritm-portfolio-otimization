@@ -68,8 +68,7 @@ class GeneticAlgorithm(Generic[C]):
             if random() < self._mutation_chance:
                 individual.mutate()
 
-    def run(self) -> set[C]:
-        elite = set()
+    def run(self) -> list[C]:
         best: C = max(self._population, key=self._fitness_key)
         for generation in range(self._max_generations):
 
@@ -83,6 +82,5 @@ class GeneticAlgorithm(Generic[C]):
 
             if highest.fitness() > best.fitness():
                 best = highest
-            elite.add(best)
 
-        return elite
+        return [best]

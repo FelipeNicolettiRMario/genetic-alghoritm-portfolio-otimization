@@ -166,7 +166,7 @@ class YahooFinanceMarketEngine(IMarketEngine):
         roe = net_income / equity if equity != 0 else 0
 
         if ebitda == 0:
-            debt_ebitda = float("inf")
+            debt_ebitda = total_debt if total_debt == 0 else 10.0
         else:
             debt_ebitda = total_debt / ebitda
 

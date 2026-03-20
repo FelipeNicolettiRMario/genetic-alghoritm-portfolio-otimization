@@ -1,8 +1,11 @@
-from src.market.yahoo_finance_market_engine import YahooFinanceMarketEngine
+from src.market.yahoo_finance.market_engine import YahooFinanceMarketEngine
 from src.genetic_alghoritm.genetic_algorithm import GeneticAlgorithm
 from src.genetic_alghoritm.island_model import IslandModelGeneticAlgorithm
 from src.usecases.fundamentalist import FundamentalistChromosome
 from src.usecases.volatility import TripleRiskEfficiencyChromosome
+from src.backtester.holder_backtester import HolderBacktester
+from src.market.yahoo_finance.normalizer import normalize_market_frame
+from src.allocation.balanced import BalancedAllocation
 
 tickers = [
         "PETR4.SA",
@@ -10,7 +13,6 @@ tickers = [
         "ITUB4.SA",
         "BBDC4.SA",
         "ABEV3.SA",
-        "MGLU3.SA",
         "B3SA3.SA",
         "BBAS3.SA",
         "GGBR4.SA",
@@ -79,3 +81,20 @@ isga: IslandModelGeneticAlgorithm[TripleRiskEfficiencyChromosome] = (
     )
 )
 result: list[TripleRiskEfficiencyChromosome] = isga.run()
+
+print("------------------- FIM DO PROCESSO GENETICO DE BALANCEAMENTO -------------------")
+
+for wallet in result:
+    print(f"Carteira: {wallet._stocks}")
+    backtester = HolderBacktester(
+        market_frame=engine.stock_history,
+        market_frame_normalizer=normalize_market_frame,
+        initial_investment=10000.0,
+        wallet=wallet._stocks,
+        allocation_strategy_engine=BalancedAllocation(
+            wallet._stocks, 500.00
+        )
+    )
+    backtester.run_backtest()
+    print(f"Resultados do backtest: {backtester.get_performance_metrics()}")
+    print("---------------------")

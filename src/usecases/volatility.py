@@ -107,7 +107,7 @@ class TripleRiskEfficiencyChromosome(Chromosome):
 
     def mutate(self):
         stock_to_increase, stock_to_decrease = choices(self._stocks, k=2)
-        while stock_to_increase is stock_to_decrease or stock_to_decrease.amount < 2:
+        while stock_to_increase.ticker == stock_to_decrease.ticker or stock_to_decrease.amount < 2:
             stock_to_increase, stock_to_decrease = choices(self._stocks, k=2)
 
         max_transfer = stock_to_decrease.amount // 2
